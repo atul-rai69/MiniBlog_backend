@@ -27,9 +27,9 @@ const storage = new CloudinaryStorage({
 const upload = multer({ storage:storage });
 
 app.use(cors({credentials:true, origin:process.env.CLIENT_URL}));
-app.use(express.json());
+
+app.use(express.json()); 
 app.use(cookieParser());
-// app.use('/uploads' , express.static(__dirname + '/uploads'));
 
 mongoose.connect(process.env.MONGO_URL)
 .then(() => console.log("connected to database successfully"))
@@ -87,10 +87,11 @@ app.post('/logout',(req,res) => {
 })
 
 app.post('/post',upload.single('file'),async (req,res) => {
-    console.log(req.file.path);
-    const {token} = req.cookies;
+    try{
+        console.log(req.file.path);
+        const {token} = req.cookies;
     
-    jwt.verify(token, secret, {},async (err,info) =>{
+        jwt.verify(token, secret, {},async (err,info) =>{
         if(err) throw err;
         const{title,summary,content} = req.body;
         // Cloudinary URL will be available in req.file.path after successful upload
@@ -101,9 +102,14 @@ app.post('/post',upload.single('file'),async (req,res) => {
         content,
         cover:req.file.path,
         author:info.id,
-    });
+        });
         res.json(postDoc);
-    });
+        });
+    }
+    catch (e) {
+        console.error('Error in POST /post:', e);
+        res.status(500).json('Internal server error');
+    } 
 
     
 });
