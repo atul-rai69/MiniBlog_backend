@@ -26,7 +26,13 @@ const storage = new CloudinaryStorage({
 });
 const upload = multer({ storage:storage });
 
-app.use(cors({credentials:true, origin:process.env.CLIENT_URL}));
+
+
+app.use(cors({
+    credentials:true,
+    origin:process.env.CLIENT_URL,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    }));
 
 app.use(express.json()); 
 app.use(cookieParser());
@@ -88,6 +94,9 @@ app.post('/logout',(req,res) => {
 
 app.post('/post',upload.single('file'),async (req,res) => {
     try{
+        if (!req.file) {
+            return res.status(400).json({ error: 'File upload failed' });
+        }
         console.log(req.file.path);
         const {token} = req.cookies;
     
