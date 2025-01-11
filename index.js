@@ -12,10 +12,8 @@ const multer  = require('multer');
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const cloudinary = require('./cloudinaryConfig');
 const fs = require('fs');
-
 const salt = bcrypt.genSaltSync(10);
 const secret = process.env.JWT_SECRET;
-
 // Set up Cloudinary storage
 const storage = new CloudinaryStorage({
     cloudinary: cloudinary,
@@ -28,12 +26,37 @@ const upload = multer({ storage:storage });
 
 
 
-app.use(cors({
-    credentials:true,
-    origin:process.env.CLIENT_URL,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-    }));
+const allowedOrigins = [process.env.CLIENT_URL];
+
+// Configure CORS
+const corsOptions = {
+    origin: function (origin, callback) {
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error("Not allowed by CORS"));
+        }
+    },
+    credentials: true, // Allow cookies to be sent with requests
+    methods: "GET,POST,PUT,DELETE,OPTIONS", // Allowed HTTP methods
+    allowedHeaders: "Content-Type,Authorization", // Allowed headers
+};
+
+// Use CORS middleware
+app.use(cors(corsOptions));
+
+// Handle preflight requests
+app.options("*", cors(corsOptions));
+
+
+
+
+// app.use(cors({
+//     credentials:true,
+//     origin:process.env.CLIENT_URL,
+//     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+//     allowedHeaders: ['Content-Type', 'Authorization'],
+//     }));
 
 app.use(express.json()); 
 app.use(cookieParser());
